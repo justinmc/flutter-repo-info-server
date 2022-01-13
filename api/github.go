@@ -16,6 +16,9 @@ type PR struct {
   MergedAt string `json:"merged_at"`
 }
 
+// Returns the SHA for the merge commit of the given PR.
+//
+// Returns an error if the PR doesn't exist or isn't merged.
 func GetPrMergeCommit(prNumber int) (string, error) {
   resp, err := http.Get(kAPI + "/pulls/" + strconv.Itoa(prNumber));
   if (err != nil) {
@@ -31,8 +34,9 @@ func GetPrMergeCommit(prNumber int) (string, error) {
   var pr PR;
   json.Unmarshal([]byte(bodyString), &pr)
 
-  //fmt.Println("justin pr", pr);
-
+  if (pr.MergeCommitSha == "") {
+    return "", errors.New("PR doesn't exist.");
+  }
   if (pr.MergedAt == "") {
     return "", errors.New("PR not yet merged.");
   }

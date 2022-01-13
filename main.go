@@ -1,6 +1,8 @@
 package main
 
 import (
+  "encoding/json"
+  "errors"
   "fmt"
   "io/ioutil"
   "log"
@@ -10,8 +12,9 @@ import (
 
 const kAPI = "https://api.github.com/repos/flutter/flutter";
 
-func handler(w http.ResponseWriter, r *http.Request) {
-  fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
+type PR struct {
+  MergeCommitSha string `json:"merge_commit_sha"`
+  MergedAt string `json:"merged_at"`
 }
 
 func main() {
@@ -22,16 +25,23 @@ func main() {
   */
 
   //var merged bool = prWasMerged(96323); // Not merged yet, draft.
-  var merged bool = prWasMerged(95948); // Merged.
-  //var merged bool = prWasMerged(95948888); // Doesn't exist.
-  fmt.Println("justin merged?", merged);
+  //var merged bool = prWasMerged(95948); // Merged.
+  //fmt.Println("justin merged?", merged);
+
+  mergeCommit, err := getPrMergeCommit(95948);
+  if (err != nil) {
+    log.Fatalln(err);
+  }
+
+  fmt.Println("justin merge commit", mergeCommit);
 }
 
-// Returns true if the PR has been merged, false otherwise.
-//
-// Even if the PR doesn't exist, will simply return false.
-func prWasMerged(prNumber int) bool {
-  resp, err := http.Get(kAPI + "/pulls/" + strconv.Itoa(prNumber) + "/merge");
+func handler(w http.ResponseWriter, r *http.Request) {
+  fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
+}
+
+func getPrMergeCommit(prNumber int) (string, error) {
+  resp, err := http.Get(kAPI + "/pulls/" + strconv.Itoa(prNumber));
   if (err != nil) {
     log.Fatalln(err);
   }
@@ -41,7 +51,15 @@ func prWasMerged(prNumber int) bool {
     log.Fatalln(err)
   }
   bodyString := string(body)
-  //fmt.Println("justin success", bodyString);
 
-  return len(bodyString) == 0;
+  var pr PR;
+  json.Unmarshal([]byte(bodyString), &pr)
+
+  //fmt.Println("justin pr", pr);
+
+  if (pr.MergedAt == "") {
+    return "", errors.New("PR not yet merged.");
+  }
+
+  return pr.MergeCommitSha, nil;
 }

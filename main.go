@@ -2,17 +2,17 @@ package main
 
 import (
   "fmt"
-  "github.com/justinmc/flutter-repo-info/api"
+  "github.com/justinmc/flutter-repo-info/server"
   "log"
   "net/http"
 )
 
+const kPort string = "8080";
+
 func main() {
-  /*
-  fmt.Println("Starting server...")
-  http.HandleFunc("/", handler)
-  log.Fatal(http.ListenAndServe(":8080", nil))
-  */
+  fmt.Println("Server listening on", kPort, "...");
+  http.HandleFunc("/pr/", server.RoutePR)
+  log.Fatal(http.ListenAndServe(":" + kPort, nil))
 
   //var merged bool = prWasMerged(96323); // Not merged yet, draft.
   //var merged bool = prWasMerged(95948); // Merged.
@@ -26,15 +26,4 @@ func main() {
 
   fmt.Println("justin merge commit", mergeCommit);
   */
-
-  isInStable, err := api.IsInStable("f3947ea"); // In stable.
-  //isInStable, err := api.IsInStable("8b46014"); // Not in stable (yet).
-  if (err != nil) {
-    log.Fatalln(err);
-  }
-  fmt.Println("justin is in stable?", isInStable);
-}
-
-func handler(w http.ResponseWriter, r *http.Request) {
-  fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
 }

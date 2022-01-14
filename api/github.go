@@ -6,7 +6,6 @@ import (
   "io/ioutil"
   "log"
   "net/http"
-  "strconv"
 )
 
 const kAPI string = "https://api.github.com/repos/flutter/flutter";
@@ -61,8 +60,8 @@ func IsInStable(sha string) (bool, error) {
 //
 // Returns an error if the PR doesn't exist, isn't merged, or isn't based on
 // master.
-func GetPrMergeCommit(prNumber int) (string, error) {
-  resp, err := http.Get(kAPI + "/pulls/" + strconv.Itoa(prNumber));
+func GetPrMergeCommit(prNumber string) (string, error) {
+  resp, err := http.Get(kAPI + "/pulls/" + prNumber);
   if (err != nil) {
     log.Fatalln(err);
   }

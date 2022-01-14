@@ -15,20 +15,28 @@ import (
 //    - Return a response, don't just log.
 //  * Currently takes a SHA, but it should take a PR number and find the SHA itself.
 func RoutePR(w http.ResponseWriter, r *http.Request) {
-  var sha string = r.URL.Path[len("/pr/"):]
-
-  fmt.Println("justin sha", sha);
-  if (sha == "") {
+  var prNumber string = r.URL.Path[len("/pr/"):]
+  if (prNumber == "") {
     // TODO(justinmc): Error response code in error states like this one, and
     // 200's in success states.
-    fmt.Fprintf(w, "No valid SHA given.");
+    fmt.Fprintf(w, "No valid PR given.");
     return;
   }
 
-  isInStable, err := api.IsInStable(sha); // In stable.
-  //isInStable, err := api.IsInStable("8b46014"); // Not in stable (yet).
+  sha, err := api.GetPrMergeCommit(prNumber);
   if (err != nil) {
-    fmt.Fprintf(w, "No valid SHA given.");
+    fmt.Fprintf(w, "Couldn't find merge commit for given PR %s.", prNumber);
+    return;
+  }
+
+  if (sha == "") {
+    fmt.Fprintf(w, "Couldn't find merge commit for given PR %s.", prNumber);
+    return;
+  }
+
+  isInStable, err := api.IsInStable(sha);
+  if (err != nil) {
+    fmt.Fprintf(w, "Couldn't determine if the PR %s's merge %s commit was in stable.", prNumber, sha);
     return;
   }
 
